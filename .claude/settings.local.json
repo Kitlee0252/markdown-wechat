@@ -12,7 +12,15 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "mcp__github-server__search_repositories",
-      "Bash(claude mcp:*)"
+      "Bash(claude mcp:*)",
+      "Bash(python:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_handle_dialog",
+      "mcp__playwright__browser_take_screenshot"
     ],
     "deny": [],
     "ask": []

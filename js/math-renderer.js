@@ -142,7 +142,7 @@ class MathRenderer {
 
         // 提取并替换块级公式
         processed = processed.replace(this.blockMathRegex, (match, math) => {
-            const placeholder = `__MATH_BLOCK_${mathBlocks.length}__`;
+            const placeholder = `MATH_BLOCK_${mathBlocks.length}`;
             mathBlocks.push({
                 type: 'block',
                 content: math,
@@ -153,7 +153,7 @@ class MathRenderer {
 
         // 提取并替换行内公式
         processed = processed.replace(this.inlineMathRegex, (match, math) => {
-            const placeholder = `__MATH_INLINE_${mathBlocks.length}__`;
+            const placeholder = `MATH_INLINE_${mathBlocks.length}`;
             mathBlocks.push({
                 type: 'inline',
                 content: math,
@@ -164,7 +164,7 @@ class MathRenderer {
 
         // 提取LaTeX环境
         processed = processed.replace(this.latexBlockRegex, (match, env, body) => {
-            const placeholder = `__MATH_ENV_${mathBlocks.length}__`;
+            const placeholder = `MATH_ENV_${mathBlocks.length}`;
             mathBlocks.push({
                 type: 'environment',
                 env: env,

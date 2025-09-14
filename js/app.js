@@ -203,8 +203,7 @@ class MarkdownWeChatApp {
             this.isProcessing = true;
 
             // 解析Markdown
-            const preprocessed = this.markdownParser.preprocess(this.currentMarkdown);
-            const html = await this.markdownParser.parse(preprocessed);
+            const html = await this.markdownParser.parse(this.currentMarkdown);
 
             // 适配微信格式
             const currentTemplate = this.templateManager.getCurrentTemplate();
