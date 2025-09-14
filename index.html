@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown转微信公众号工具</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 标题栏 -->
+        <header class="header">
+            <h1>Markdown转微信公众号工具</h1>
+        </header>
+
+        <!-- 主工作区 -->
+        <main class="main-container">
+            <!-- 左侧编辑区 -->
+            <div class="editor-section">
+                <!-- 左上方文件操作工具栏 -->
+                <div class="toolbar-left">
+                    <input type="file" id="fileInput" accept=".md,.txt" style="display: none;">
+                    <button id="importBtn" class="btn btn-primary">导入文件</button>
+                    <button id="newBtn" class="btn btn-secondary">新建</button>
+                    <button id="clearBtn" class="btn btn-warning">清空</button>
+                </div>
+
+                <!-- Markdown编辑器 -->
+                <div class="editor-container">
+                    <textarea id="markdownEditor" placeholder="在此输入或粘贴你的Markdown内容...
+
+# 示例标题
+
+这里是一些示例文本，你可以：
+- 直接在此编辑Markdown
+- 使用上方的"导入文件"按钮导入.md文件
+- 拖拽.md文件到此区域
+
+## 代码示例
+
+```javascript
+console.log('Hello WeChat!');
+```
+
+## 引用示例
+
+> 这是一个引用文本示例
+
+**粗体文本** 和 *斜体文本*
+
+1. 有序列表项1
+2. 有序列表项2
+
+[链接示例](https://github.com)"></textarea>
+                </div>
+            </div>
+
+            <!-- 右侧预览区 -->
+            <div class="preview-section">
+                <!-- 右上方导出工具栏 -->
+                <div class="toolbar-right">
+                    <button id="copyBtn" class="btn btn-success">复制富文本</button>
+                    <button id="exportHtmlBtn" class="btn btn-info">导出HTML</button>
+                    <button id="exportZipBtn" class="btn btn-info">导出ZIP</button>
+                </div>
+
+                <!-- 预览区域 -->
+                <div class="preview-container">
+                    <div id="previewContent" class="preview-content">
+                        <!-- 预览内容将在这里显示 -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部状态栏 -->
+        <footer class="status-bar">
+            <div class="status-left">
+                <label for="templateSelect">样式模板:</label>
+                <select id="templateSelect" class="template-select">
+                    <option value="minimal">极简风格</option>
+                    <option value="tech">技术风格</option>
+                    <option value="academic">学术风格</option>
+                </select>
+            </div>
+            <div class="status-right">
+                <span id="fileStatus">状态: 就绪</span>
+                <span class="separator">|</span>
+                <span id="wordCount">字数: 0</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 引入第三方库 -->
+    <script src="libs/marked.min.js"></script>
+    <script src="libs/dompurify.min.js"></script>
+
+    <!-- 引入自定义脚本 -->
+    <script src="js/utils.js"></script>
+    <script src="js/markdown-parser.js"></script>
+    <script src="js/wechat-adapter.js"></script>
+    <script src="js/template-manager.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
