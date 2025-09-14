@@ -1,0 +1,462 @@
+/* 学术风格模板 - 微信公众号适配 */
+
+.wechat-content {
+    font-family: 'Times New Roman', 'SimSun', serif;
+    font-size: 16px;
+    line-height: 1.8;
+    color: #2c2c2c;
+    max-width: 100%;
+    margin: 0;
+    padding: 25px;
+    background-color: #ffffff;
+}
+
+/* 标题样式 - 学术论文风格 */
+.wechat-content h1 {
+    color: #1a1a1a;
+    font-size: 1.8em;
+    font-weight: bold;
+    margin: 2em 0 1.5em 0;
+    text-align: center;
+    padding: 1em 0;
+    border-top: 3px solid #8b4513;
+    border-bottom: 1px solid #d4af37;
+    position: relative;
+}
+
+.wechat-content h1::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 2px;
+    background-color: #8b4513;
+}
+
+.wechat-content h2 {
+    color: #2c2c2c;
+    font-size: 1.4em;
+    font-weight: bold;
+    margin: 1.8em 0 1em 0;
+    padding: 0.5em 0 0.3em 0;
+    border-bottom: 2px solid #8b4513;
+    text-align: left;
+}
+
+.wechat-content h3 {
+    color: #2c2c2c;
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 1.5em 0 0.8em 0;
+    font-style: italic;
+    text-decoration: underline;
+    text-decoration-color: #d4af37;
+    text-underline-offset: 3px;
+}
+
+.wechat-content h4 {
+    color: #2c2c2c;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin: 1.3em 0 0.8em 0;
+    font-style: italic;
+}
+
+.wechat-content h5,
+.wechat-content h6 {
+    color: #2c2c2c;
+    font-weight: bold;
+    margin: 1.2em 0 0.8em 0;
+    font-style: italic;
+}
+
+/* 段落样式 - 学术格式 */
+.wechat-content p {
+    margin: 1.2em 0;
+    line-height: 1.9;
+    text-align: justify;
+    text-indent: 2em; /* 段落首行缩进 */
+    color: #2c2c2c;
+}
+
+/* 首段不缩进 */
+.wechat-content h1 + p,
+.wechat-content h2 + p,
+.wechat-content h3 + p,
+.wechat-content h4 + p,
+.wechat-content h5 + p,
+.wechat-content h6 + p {
+    text-indent: 0;
+}
+
+/* 引用样式 - 学术引用 */
+.wechat-content blockquote {
+    background-color: #f8f6f0;
+    border: none;
+    border-left: 5px solid #8b4513;
+    padding: 1.5em 2em;
+    margin: 2em 1em;
+    font-style: italic;
+    color: #444;
+    position: relative;
+    border-radius: 0;
+}
+
+.wechat-content blockquote::before {
+    content: '"';
+    position: absolute;
+    top: -5px;
+    left: 20px;
+    font-size: 4em;
+    color: #d4af37;
+    font-family: serif;
+    opacity: 0.5;
+}
+
+.wechat-content blockquote p {
+    text-indent: 0;
+}
+
+/* 代码样式 - 学术化 */
+.wechat-content code {
+    background-color: #f5f5f0;
+    padding: 0.2em 0.4em;
+    border-radius: 2px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    color: #8b4513;
+    border: 1px solid #e0dcc3;
+}
+
+.wechat-content pre {
+    background-color: #2f2f2f;
+    color: #f5f5f5;
+    padding: 1.5em;
+    border-radius: 3px;
+    overflow-x: auto;
+    margin: 2em 0;
+    font-family: 'Courier New', monospace;
+    line-height: 1.4;
+    border: 1px solid #8b4513;
+}
+
+.wechat-content pre code {
+    background-color: transparent;
+    color: inherit;
+    padding: 0;
+    border: none;
+}
+
+/* 列表样式 - 正式格式 */
+.wechat-content ul,
+.wechat-content ol {
+    padding-left: 2.5em;
+    margin: 1.5em 0;
+}
+
+.wechat-content ul li {
+    margin: 0.8em 0;
+    line-height: 1.8;
+    position: relative;
+}
+
+.wechat-content ul li::marker {
+    color: #8b4513;
+}
+
+.wechat-content ol li {
+    margin: 0.8em 0;
+    line-height: 1.8;
+}
+
+.wechat-content ol li::marker {
+    color: #8b4513;
+    font-weight: bold;
+}
+
+/* 嵌套列表 */
+.wechat-content ul ul,
+.wechat-content ol ol,
+.wechat-content ul ol,
+.wechat-content ol ul {
+    margin: 0.5em 0;
+}
+
+/* 表格样式 - 学术表格 */
+.wechat-content table {
+    width: 100%;
+    margin: 2em 0;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    font-family: 'Times New Roman', serif;
+    border: 2px solid #8b4513;
+}
+
+.wechat-content th {
+    padding: 1em;
+    background-color: #f8f6f0;
+    color: #2c2c2c;
+    font-weight: bold;
+    text-align: center;
+    border: 1px solid #8b4513;
+}
+
+.wechat-content td {
+    padding: 0.8em 1em;
+    border: 1px solid #8b4513;
+    background-color: #ffffff;
+    text-align: left;
+}
+
+.wechat-content tr:nth-child(even) {
+    background-color: #fafaf5;
+}
+
+/* 表格标题样式 */
+.wechat-content table + p {
+    text-align: center;
+    font-size: 0.9em;
+    font-style: italic;
+    margin-top: 0.5em;
+    color: #666;
+}
+
+/* 链接样式 - 学术风格 */
+.wechat-content a {
+    color: #8b4513;
+    text-decoration: none;
+    border-bottom: 1px dotted #8b4513;
+    font-weight: normal;
+}
+
+.wechat-content a:hover {
+    border-bottom: 1px solid #8b4513;
+    background-color: #f8f6f0;
+}
+
+/* 图片样式 */
+.wechat-content img {
+    max-width: 100%;
+    height: auto;
+    margin: 2em 0;
+    border: 1px solid #d4af37;
+    border-radius: 2px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 5px;
+    background-color: #ffffff;
+}
+
+/* 图片标题样式 */
+.wechat-content img + em {
+    display: block;
+    text-align: center;
+    font-size: 0.9em;
+    margin-top: 0.5em;
+    color: #666;
+}
+
+/* 强调样式 */
+.wechat-content strong {
+    font-weight: bold;
+    color: #1a1a1a;
+}
+
+.wechat-content em {
+    font-style: italic;
+    color: #444;
+}
+
+/* 水平线样式 */
+.wechat-content hr {
+    margin: 3em 0;
+    border: none;
+    height: 1px;
+    background-color: #8b4513;
+    position: relative;
+}
+
+.wechat-content hr::after {
+    content: '§';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ffffff;
+    color: #8b4513;
+    font-size: 1.2em;
+    padding: 0 10px;
+}
+
+/* 脚注样式 */
+.wechat-content sup {
+    font-size: 0.7em;
+    color: #8b4513;
+    font-weight: bold;
+}
+
+/* 任务列表样式 */
+.wechat-content input[type="checkbox"] {
+    margin-right: 0.8em;
+}
+
+/* 定义列表样式 */
+.wechat-content dl {
+    margin: 1.5em 0;
+}
+
+.wechat-content dt {
+    font-weight: bold;
+    color: #1a1a1a;
+    margin-top: 1em;
+    text-decoration: underline;
+    text-decoration-color: #d4af37;
+}
+
+.wechat-content dd {
+    margin: 0.5em 0 0.5em 2em;
+    line-height: 1.8;
+}
+
+/* 学术专用样式 */
+.wechat-content .abstract {
+    background-color: #f8f6f0;
+    padding: 1.5em;
+    border: 1px solid #d4af37;
+    margin: 2em 0;
+    font-style: italic;
+    border-radius: 3px;
+}
+
+.wechat-content .abstract::before {
+    content: 'Abstract: ';
+    font-weight: bold;
+    font-style: normal;
+    color: #8b4513;
+}
+
+/* 参考文献样式 */
+.wechat-content .references {
+    margin-top: 3em;
+    padding-top: 1em;
+    border-top: 2px solid #8b4513;
+}
+
+.wechat-content .references h2 {
+    text-align: center;
+    font-size: 1.3em;
+    margin-bottom: 1.5em;
+}
+
+/* KaTeX数学公式样式 - 学术风格 */
+.wechat-content .katex {
+    font-size: 1em;
+    color: inherit;
+    font-family: 'Times New Roman', serif;
+}
+
+.wechat-content .katex-display {
+    margin: 1.5em 0;
+    text-align: center;
+    overflow-x: auto;
+}
+
+.wechat-content .math-block {
+    text-align: center;
+    margin: 1.5em 0;
+    overflow-x: auto;
+    background-color: #fafaf5;
+    padding: 1em;
+    border: 1px solid #d4af37;
+    border-radius: 2px;
+}
+
+.wechat-content .math-inline {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.wechat-content .math-error {
+    color: #8b4513;
+    background-color: #fff8dc;
+    padding: 0.3em 0.5em;
+    border: 1px solid #daa520;
+    border-radius: 2px;
+    font-size: 0.9em;
+}
+
+.wechat-content .math-environment {
+    background-color: #f8f6f0;
+    border: 2px solid #8b4513;
+    border-radius: 3px;
+    padding: 1.2em;
+    margin: 2em 0;
+    position: relative;
+}
+
+.wechat-content .math-environment::before {
+    content: 'Mathematical Expression';
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    background-color: #ffffff;
+    padding: 0 10px;
+    font-size: 0.8em;
+    color: #8b4513;
+    font-style: italic;
+}
+
+/* 响应式调整 */
+@media (max-width: 600px) {
+    .wechat-content {
+        padding: 20px;
+        font-size: 15px;
+    }
+
+    .wechat-content p {
+        text-indent: 1.5em;
+    }
+
+    .wechat-content h1 {
+        font-size: 1.6em;
+        padding: 0.8em 0;
+    }
+
+    .wechat-content h2 {
+        font-size: 1.3em;
+    }
+
+    .wechat-content h3 {
+        font-size: 1.15em;
+    }
+
+    .wechat-content ul,
+    .wechat-content ol {
+        padding-left: 2em;
+    }
+
+    .wechat-content table {
+        font-size: 0.8em;
+    }
+
+    .wechat-content blockquote {
+        padding: 1em 1.5em;
+        margin: 1.5em 0.5em;
+    }
+
+    .wechat-content .katex {
+        font-size: 0.9em;
+    }
+
+    .wechat-content .math-block {
+        padding: 0.8em;
+        font-size: 0.9em;
+    }
+
+    .wechat-content .math-environment::before {
+        font-size: 0.7em;
+    }
+}

@@ -10,7 +10,9 @@
       "Bash(rm:*)",
       "Bash(git config:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "mcp__github-server__search_repositories",
+      "Bash(claude mcp:*)"
     ],
     "deny": [],
     "ask": []

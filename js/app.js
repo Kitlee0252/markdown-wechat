@@ -6,6 +6,8 @@ class MarkdownWeChatApp {
         this.markdownParser = new MarkdownParser();
         this.wechatAdapter = new WeChatAdapter();
         this.templateManager = new TemplateManager();
+        this.imageProcessor = new ImageProcessor();
+        this.exportManager = new ExportManager(this);
 
         // DOM 元素引用
         this.elements = {};
@@ -23,12 +25,17 @@ class MarkdownWeChatApp {
     /**
      * 初始化应用
      */
-    init() {
+    async init() {
         this.initElements();
         this.bindEvents();
         this.loadInitialContent();
         this.templateManager.loadFromLocalStorage();
         this.updateTemplateSelector();
+
+        // 加载当前模板的CSS
+        const currentTemplate = this.templateManager.getCurrentTemplate();
+        await this.templateManager.loadTemplateCSS(currentTemplate);
+
         this.updatePreview();
 
         // 显示欢迎消息
@@ -100,6 +107,9 @@ class MarkdownWeChatApp {
         // 窗口事件
         window.addEventListener('beforeunload', (e) => this.onBeforeUnload(e));
         window.addEventListener('resize', debounce(() => this.onWindowResize(), 100));
+
+        // 剪贴板粘贴事件
+        this.elements.markdownEditor.addEventListener('paste', (e) => this.onPaste(e));
     }
 
     /**
@@ -126,7 +136,7 @@ class MarkdownWeChatApp {
 
             const files = e.dataTransfer.files;
             if (files.length > 0) {
-                this.handleFile(files[0]);
+                this.handleDroppedFiles(files);
             }
         });
     }
@@ -186,7 +196,7 @@ class MarkdownWeChatApp {
     /**
      * 更新预览内容
      */
-    updatePreview() {
+    async updatePreview() {
         if (this.isProcessing) return;
 
         try {
@@ -194,7 +204,7 @@ class MarkdownWeChatApp {
 
             // 解析Markdown
             const preprocessed = this.markdownParser.preprocess(this.currentMarkdown);
-            const html = this.markdownParser.parse(preprocessed);
+            const html = await this.markdownParser.parse(preprocessed);
 
             // 适配微信格式
             const currentTemplate = this.templateManager.getCurrentTemplate();
@@ -402,7 +412,7 @@ class MarkdownWeChatApp {
     /**
      * 导出HTML文件
      */
-    onExportHtml() {
+    async onExportHtml() {
         if (!this.currentHtml) {
             showNotification('没有内容可导出', 'warning');
             return;
@@ -413,51 +423,64 @@ class MarkdownWeChatApp {
                 this.currentFileName.replace(/\.(md|txt|markdown)$/i, '.html') :
                 `markdown_wechat_${getTimestamp()}.html`;
 
-            const fullHtml = `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>微信公众号文章</title>
-    <style>
-        body {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-    </style>
-</head>
-<body>
-${this.currentHtml}
-</body>
-</html>`;
-
-            downloadFile(fullHtml, fileName, 'text/html');
+            await this.exportManager.exportHTML(this.currentHtml, fileName);
             showNotification(`HTML文件已导出: ${fileName}`, 'success');
 
         } catch (error) {
-            console.error('导出失败:', error);
-            showNotification('导出失败: ' + error.message, 'error');
+            console.error('HTML导出失败:', error);
+            showNotification('HTML导出失败: ' + error.message, 'error');
         }
     }
 
     /**
-     * 导出ZIP文件（暂未实现）
+     * 导出ZIP文件
      */
-    onExportZip() {
-        showNotification('ZIP导出功能开发中...', 'warning');
-        // TODO: 实现ZIP打包功能，包含HTML文件和图片资源
+    async onExportZip() {
+        if (!this.currentHtml) {
+            showNotification('没有内容可导出', 'warning');
+            return;
+        }
+
+        try {
+            showNotification('正在生成ZIP文件，请稍候...', 'info');
+
+            const fileName = this.currentFileName ?
+                this.currentFileName.replace(/\.(md|txt|markdown)$/i, '') :
+                `markdown_wechat_${getTimestamp()}`;
+
+            await this.exportManager.exportZIP(this.currentHtml, fileName);
+            showNotification(`ZIP文件已导出: ${fileName}.zip`, 'success');
+
+        } catch (error) {
+            console.error('ZIP导出失败:', error);
+            if (error.message.includes('JSZip库未加载')) {
+                showNotification('ZIP导出功能需要JSZip库支持', 'error');
+            } else {
+                showNotification('ZIP导出失败: ' + error.message, 'error');
+            }
+        }
     }
 
     /**
      * 模板变更处理
      */
-    onTemplateChange(event) {
+    async onTemplateChange(event) {
         const newTemplate = event.target.value;
 
         if (this.templateManager.setCurrentTemplate(newTemplate)) {
-            this.updatePreview();
+            // 加载新模板的CSS
+            const cssLoaded = await this.templateManager.loadTemplateCSS(newTemplate);
+
+            if (cssLoaded) {
+                // 延迟一点时间确保CSS加载完成
+                setTimeout(() => {
+                    this.updatePreview();
+                }, 100);
+            } else {
+                // CSS加载失败，直接更新预览（使用备用样式）
+                this.updatePreview();
+            }
+
             this.templateManager.saveToLocalStorage();
             showNotification(`已切换到${this.templateManager.getTemplate(newTemplate).name}`, 'success');
         }
@@ -479,6 +502,157 @@ ${this.currentHtml}
      */
     onWindowResize() {
         // 这里可以添加响应式处理逻辑
+    }
+
+    /**
+     * 处理拖拽文件
+     * @param {FileList} files - 文件列表
+     */
+    async handleDroppedFiles(files) {
+        const fileArray = Array.from(files);
+        const markdownFiles = fileArray.filter(file => isValidFileType(file, ['md', 'txt', 'markdown']));
+        const imageFiles = fileArray.filter(file => this.imageProcessor.isValidImageType(file.type));
+
+        try {
+            // 处理Markdown文件
+            if (markdownFiles.length > 0) {
+                const file = markdownFiles[0]; // 只处理第一个Markdown文件
+                await this.handleFile(file);
+            }
+
+            // 处理图片文件
+            if (imageFiles.length > 0) {
+                await this.handleDroppedImages(imageFiles);
+            }
+
+            // 如果没有识别的文件类型
+            if (markdownFiles.length === 0 && imageFiles.length === 0) {
+                showNotification('请拖拽Markdown文件(.md)或图片文件', 'warning');
+            }
+
+        } catch (error) {
+            console.error('文件处理失败:', error);
+            showNotification('文件处理失败: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * 处理拖拽的图片
+     * @param {Array} imageFiles - 图片文件数组
+     */
+    async handleDroppedImages(imageFiles) {
+        try {
+            this.updateStatus('状态: 正在处理图片...', '');
+
+            const results = [];
+            for (const file of imageFiles) {
+                try {
+                    const result = await this.imageProcessor.processImage(file);
+                    results.push(result);
+                } catch (error) {
+                    console.error(`图片处理失败: ${file.name}`, error);
+                    showNotification(`图片处理失败: ${file.name} - ${error.message}`, 'error');
+                }
+            }
+
+            if (results.length > 0) {
+                this.insertImagesIntoEditor(results);
+                showNotification(`成功处理了 ${results.length} 张图片`, 'success');
+            }
+
+            this.updateStatus('状态: 图片处理完成', this.currentMarkdown);
+
+        } catch (error) {
+            console.error('批量图片处理失败:', error);
+            showNotification('批量图片处理失败: ' + error.message, 'error');
+            this.updateStatus('状态: 图片处理失败', this.currentMarkdown);
+        }
+    }
+
+    /**
+     * 处理剪贴板粘贴事件
+     * @param {ClipboardEvent} event - 剪贴板事件
+     */
+    async onPaste(event) {
+        try {
+            // 检查是否包含图片
+            const images = await this.imageProcessor.processClipboardImages(event);
+
+            if (images.length > 0) {
+                // 阻止默认粘贴行为
+                event.preventDefault();
+
+                this.updateStatus('状态: 正在处理剪贴板图片...', '');
+
+                const successfulImages = images.filter(img => !img.error);
+                const failedImages = images.filter(img => img.error);
+
+                if (successfulImages.length > 0) {
+                    this.insertImagesIntoEditor(successfulImages);
+                    showNotification(`成功处理了 ${successfulImages.length} 张剪贴板图片`, 'success');
+                }
+
+                if (failedImages.length > 0) {
+                    console.error('部分图片处理失败:', failedImages);
+                    showNotification(`${failedImages.length} 张图片处理失败`, 'warning');
+                }
+
+                this.updateStatus('状态: 剪贴板图片处理完成', this.currentMarkdown);
+            }
+            // 如果没有图片，让默认粘贴行为继续
+
+        } catch (error) {
+            console.error('剪贴板处理失败:', error);
+            showNotification('剪贴板处理失败: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * 将图片插入编辑器
+     * @param {Array} imageResults - 图片处理结果数组
+     */
+    insertImagesIntoEditor(imageResults) {
+        const editor = this.elements.markdownEditor;
+        const cursorPos = editor.selectionStart;
+        const textBefore = editor.value.substring(0, cursorPos);
+        const textAfter = editor.value.substring(cursorPos);
+
+        let insertText = '';
+        imageResults.forEach((result, index) => {
+            if (index > 0) insertText += '\n';
+            insertText += this.imageProcessor.generateImageMarkdown(result);
+
+            // 如果图片较大且没有转成base64，添加提示
+            if (!result.base64 && result.strategy !== 'base64') {
+                insertText += `\n<!-- 图片 "${result.fileName}" 较大(${this.formatFileSize(result.originalSize)})，请上传到图床后替换链接 -->`;
+            }
+        });
+
+        // 在光标位置插入图片
+        const newContent = textBefore + insertText + textAfter;
+        editor.value = newContent;
+
+        // 更新光标位置
+        const newCursorPos = cursorPos + insertText.length;
+        editor.setSelectionRange(newCursorPos, newCursorPos);
+
+        // 触发内容变更
+        this.currentMarkdown = newContent;
+        this.updatePreview();
+        this.updateStatus('状态: 已插入图片', newContent);
+    }
+
+    /**
+     * 格式化文件大小
+     * @param {number} bytes - 字节数
+     * @returns {string} 格式化后的大小
+     */
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 }
 

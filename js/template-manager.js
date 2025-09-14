@@ -208,7 +208,45 @@ class TemplateManager {
     }
 
     /**
-     * 获取模板的CSS样式
+     * 获取模板的CSS文件路径
+     * @param {string} templateKey - 模板键
+     * @returns {string} CSS文件路径
+     */
+    getTemplateCSSPath(templateKey) {
+        return `css/templates/${templateKey}.css`;
+    }
+
+    /**
+     * 动态加载模板CSS文件
+     * @param {string} templateKey - 模板键
+     * @returns {Promise<boolean>} 加载是否成功
+     */
+    async loadTemplateCSS(templateKey) {
+        return new Promise((resolve) => {
+            // 移除之前的模板样式
+            const existingLink = document.querySelector('link[data-template]');
+            if (existingLink) {
+                existingLink.remove();
+            }
+
+            // 创建新的样式链接
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = this.getTemplateCSSPath(templateKey);
+            link.setAttribute('data-template', templateKey);
+
+            link.onload = () => resolve(true);
+            link.onerror = () => {
+                console.warn(`模板CSS文件加载失败: ${templateKey}`);
+                resolve(false);
+            };
+
+            document.head.appendChild(link);
+        });
+    }
+
+    /**
+     * 获取模板的CSS样式（保留作为备用方法）
      * @param {string} templateKey - 模板键
      * @returns {string} CSS样式字符串
      */

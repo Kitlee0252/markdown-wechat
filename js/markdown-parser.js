@@ -2,6 +2,9 @@
 
 class MarkdownParser {
     constructor() {
+        this.mathRenderer = new MathRenderer();
+        this.diagramRenderer = new DiagramRenderer();
+        this.codeHighlighter = new CodeHighlighter();
         this.setupMarked();
     }
 
@@ -58,31 +61,16 @@ class MarkdownParser {
             ">\n${quote}</blockquote>\n`;
         };
 
-        // 自定义代码块渲染
+        // 自定义代码块渲染 - 将由后续处理代码高亮
         renderer.code = function(code, language) {
-            const langClass = language ? ` class="language-${language}"` : '';
-            return `<pre style="
-                margin: 1em 0;
-                padding: 1em;
-                background-color: #f4f4f4;
-                border-radius: 4px;
-                overflow-x: auto;
-                font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-                font-size: 0.9em;
-                line-height: 1.4;
-            "><code${langClass}>${escapeHtml(code)}</code></pre>\n`;
+            // 创建一个特殊标记，后续处理时会被代码高亮器替换
+            return `<div class="code-placeholder" data-language="${language || ''}" data-code="${escapeBase64(code)}"></div>\n`;
         };
 
-        // 自定义行内代码渲染
+        // 自定义行内代码渲染 - 将由后续处理代码高亮
         renderer.codespan = function(code) {
-            return `<code style="
-                padding: 0.2em 0.4em;
-                background-color: #f1f1f1;
-                border-radius: 3px;
-                font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-                font-size: 0.9em;
-                color: #e83e8c;
-            ">${escapeHtml(code)}</code>`;
+            // 创建一个特殊标记，后续处理时会被代码高亮器替换
+            return `<span class="inline-code-placeholder" data-code="${escapeBase64(code)}"></span>`;
         };
 
         // 自定义表格渲染
@@ -156,6 +144,23 @@ class MarkdownParser {
 
         // 应用自定义渲染器
         marked.use({ renderer });
+
+        // 辅助函数
+        window.escapeBase64 = function(text) {
+            try {
+                return btoa(encodeURIComponent(text));
+            } catch (error) {
+                return encodeURIComponent(text);
+            }
+        };
+
+        window.decodeBase64 = function(encoded) {
+            try {
+                return decodeURIComponent(atob(encoded));
+            } catch (error) {
+                return decodeURIComponent(encoded);
+            }
+        };
     }
 
     /**
@@ -163,12 +168,27 @@ class MarkdownParser {
      * @param {string} markdown - Markdown文本
      * @returns {string} HTML文本
      */
-    parse(markdown) {
+    async parse(markdown) {
         try {
             if (!markdown) return '';
 
+            // 预处理数学公式
+            const mathPreprocessed = this.mathRenderer.preprocessMath(markdown);
+
+            // 预处理图表
+            const diagramPreprocessed = this.diagramRenderer.preprocessDiagrams(mathPreprocessed.content);
+
             // 使用marked解析
-            let html = marked.parse(markdown);
+            let html = marked.parse(diagramPreprocessed.content);
+
+            // 恢复数学公式
+            html = this.mathRenderer.restoreMath(html, mathPreprocessed.mathBlocks);
+
+            // 恢复图表
+            html = await this.diagramRenderer.restoreDiagrams(html, diagramPreprocessed.diagramBlocks);
+
+            // 处理代码高亮
+            html = this.processCodeHighlighting(html);
 
             // 使用DOMPurify进行安全清理
             if (typeof DOMPurify !== 'undefined') {
@@ -180,11 +200,29 @@ class MarkdownParser {
                         'blockquote', 'pre', 'code',
                         'table', 'thead', 'tbody', 'tr', 'th', 'td',
                         'a', 'img',
-                        'hr', 'div', 'span'
+                        'hr', 'div', 'span',
+                        // KaTeX相关标签
+                        'math', 'semantics', 'mrow', 'mi', 'mo', 'mn', 'mtext', 'mspace',
+                        'mfrac', 'msup', 'msub', 'msubsup', 'mover', 'munder', 'munderover',
+                        'msqrt', 'mroot', 'mtable', 'mtr', 'mtd', 'mpadded', 'mphantom',
+                        'menclose', 'mfenced', 'annotation'
                     ],
                     ALLOWED_ATTR: [
                         'style', 'class', 'href', 'title', 'alt', 'src',
-                        'onmouseover', 'onmouseout'
+                        'onmouseover', 'onmouseout',
+                        // KaTeX相关属性
+                        'mathcolor', 'mathbackground', 'mathsize', 'mathvariant',
+                        'accent', 'accentunder', 'align', 'alignmentscope',
+                        'bevelled', 'close', 'columnalign', 'columnlines',
+                        'columnspacing', 'denomination', 'depth', 'dir',
+                        'display', 'displaystyle', 'edge', 'fence', 'frame',
+                        'height', 'href', 'id', 'largeop', 'length', 'linethickness',
+                        'lspace', 'lquote', 'mathcolor', 'mathsize', 'mathvariant',
+                        'maxsize', 'minsize', 'movablelimits', 'notation',
+                        'numalign', 'open', 'rowalign', 'rowlines', 'rowspacing',
+                        'rspace', 'rquote', 'scriptlevel', 'selection', 'separator',
+                        'separators', 'stretchy', 'subscriptshift', 'superscriptshift',
+                        'symmetric', 'voffset', 'width', 'xmlns'
                     ],
                     KEEP_CONTENT: true
                 });
@@ -194,6 +232,42 @@ class MarkdownParser {
         } catch (error) {
             console.error('Markdown解析错误:', error);
             return `<p style="color: red;">解析错误: ${error.message}</p>`;
+        }
+    }
+
+    /**
+     * 处理代码高亮占位符
+     * @param {string} html - HTML内容
+     * @returns {string} 处理后的HTML
+     */
+    processCodeHighlighting(html) {
+        try {
+            // 处理代码块占位符
+            html = html.replace(/<div class="code-placeholder" data-language="([^"]*)" data-code="([^"]*)"><\/div>/g, (match, language, encodedCode) => {
+                try {
+                    const code = window.decodeBase64(encodedCode);
+                    return this.codeHighlighter.highlightCode(code, language);
+                } catch (error) {
+                    console.error('代码块处理失败:', error);
+                    return `<pre style="background: #f4f4f4; padding: 1em; border-radius: 4px; overflow-x: auto;"><code>${encodedCode}</code></pre>`;
+                }
+            });
+
+            // 处理行内代码占位符
+            html = html.replace(/<span class="inline-code-placeholder" data-code="([^"]*)"><\/span>/g, (match, encodedCode) => {
+                try {
+                    const code = window.decodeBase64(encodedCode);
+                    return this.codeHighlighter.highlightInlineCode(code);
+                } catch (error) {
+                    console.error('行内代码处理失败:', error);
+                    return `<code style="background: #f1f1f1; padding: 0.2em 0.4em; border-radius: 3px;">${encodedCode}</code>`;
+                }
+            });
+
+            return html;
+        } catch (error) {
+            console.error('代码高亮处理失败:', error);
+            return html;
         }
     }
 
