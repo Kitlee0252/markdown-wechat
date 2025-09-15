@@ -1,0 +1,5 @@
+{
+  "hooks": {
+    "user-prompt-submit": ".claude_code/commit-hook.js"
+  }
+}
